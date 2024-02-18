@@ -1053,46 +1053,48 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
         for (const [hash, phrase] of foundPhrases) {
           const phraseKey = hash;
-          if (!state.phrases.has(phraseKey)) {
-            commit("SET_PHRASE", { phraseKey, phrase });
-
-            // フレーズ追加時の処理
-            const noteEvents = generateNoteEvents(
-              phrase.notes,
-              phrase.tempos,
-              phrase.tpqn
-            );
-            const polySynth = new PolySynth(audioContextRef);
-            polySynth.output.connect(channelStripRef.input);
-            const noteSequence: NoteSequence = {
-              type: "note",
-              instrument: polySynth,
-              noteEvents,
-            };
-            transportRef.addSequence(noteSequence);
-            phraseDataMap.set(phraseKey, {
-              source: polySynth,
-              sequence: noteSequence,
-            });
+          if (state.phrases.has(phraseKey)) {
+            continue;
           }
+          commit("SET_PHRASE", { phraseKey, phrase });
+
+          // フレーズ追加時の処理
+          const noteEvents = generateNoteEvents(
+            phrase.notes,
+            phrase.tempos,
+            phrase.tpqn
+          );
+          const polySynth = new PolySynth(audioContextRef);
+          polySynth.output.connect(channelStripRef.input);
+          const noteSequence: NoteSequence = {
+            type: "note",
+            instrument: polySynth,
+            noteEvents,
+          };
+          transportRef.addSequence(noteSequence);
+          phraseDataMap.set(phraseKey, {
+            source: polySynth,
+            sequence: noteSequence,
+          });
         }
         for (const key of state.phrases.keys()) {
-          if (!foundPhrases.has(key)) {
-            commit("DELETE_PHRASE", { phraseKey: key });
-
-            // フレーズ削除時の処理
-            const phraseData = phraseDataMap.get(key);
-            if (!phraseData) {
-              throw new Error("phraseData is undefined");
-            }
-            if (phraseData.source) {
-              phraseData.source.output.disconnect();
-            }
-            if (phraseData.sequence) {
-              transportRef.removeSequence(phraseData.sequence);
-            }
-            phraseDataMap.delete(key);
+          if (foundPhrases.has(key)) {
+            continue;
           }
+          commit("DELETE_PHRASE", { phraseKey: key });
+
+          // フレーズ削除時の処理
+          const phraseData = phraseDataMap.get(key);
+          if (!phraseData) {
+            throw new Error("phraseData is undefined");
+          }
+          if (phraseData.source) {
+            phraseData.source.output.disconnect();
+          }
+          if (phraseData.sequence) {
+            transportRef.removeSequence(phraseData.sequence);
+          }
+          phraseDataMap.delete(key);
         }
 
         window.electron.logInfo("Phrases updated.");
