@@ -987,9 +987,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tpqn: number,
         restDurationSeconds: number
       ) => {
-        let startTime = tickToSecond(notes[0].position, tempos, tpqn);
-        startTime -= restDurationSeconds;
-        return startTime;
+        const startTime = tickToSecond(notes[0].position, tempos, tpqn);
+        return startTime - restDurationSeconds;
       };
 
       const synthesize = async (singer: Singer, query: FrameAudioQuery) => {
