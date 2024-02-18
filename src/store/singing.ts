@@ -904,12 +904,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const restFrameLength = Math.round(restDurationSeconds * frameRate);
         const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
-        // 先頭に休符を追加
-        notesForRequestToEngine.push({
+        const restParams: NoteForRequestToEngine = {
           key: undefined,
           frameLength: restFrameLength,
           lyric: "",
-        });
+        };
+        // 先頭に休符を追加
+        notesForRequestToEngine.push(restParams);
         // ノートを変換
         const firstNoteOnTime = tickToSecond(notes[0].position, tempos, tpqn);
         let frame = 0;
@@ -937,11 +938,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           frame += noteFrameLength;
         }
         // 末尾に休符を追加
-        notesForRequestToEngine.push({
-          key: undefined,
-          frameLength: restFrameLength,
-          lyric: "",
-        });
+        notesForRequestToEngine.push(restParams);
 
         try {
           if (!getters.IS_ENGINE_READY(engineId)) {
